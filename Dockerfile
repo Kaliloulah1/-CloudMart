@@ -1,29 +1,16 @@
-FROM node:16-alpine as build
+# First stage: build
+FROM node:16-alpine as builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
+# Second stage: production
 FROM node:16-alpine
 WORKDIR /app
 RUN npm install -g serve
-COPY --from=build /app/dist /app
-ENV PORT=5001
-ENV NODE_ENV=production
-EXPOSE 5001
-CMD ["serve", "-s", ".", "-l", "5001"]
-FROM node:16-alpine as build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:16-alpine
-WORKDIR /app
-RUN npm install -g serve
-COPY --from=build /app/dist /app
+COPY --from=builder /app/dist /app
 ENV PORT=5001
 ENV NODE_ENV=production
 EXPOSE 5001
